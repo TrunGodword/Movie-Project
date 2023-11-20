@@ -1,46 +1,89 @@
-import { View, Text, Platform, TouchableOpacity, ScrollView } from "react-native";
-import React, { useState } from "react";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { StatusBar } from "expo-status-bar";
-import { Bars3CenterLeftIcon, MagnifyingGlassCircleIcon, MagnifyingGlassIcon } from 'react-native-heroicons/outline'
-import {styles} from "../theme"
-import TrendingMovies from "../components/trendingMovie"
-import MovieList from "../components/movieList";
+import { View, Text, TouchableOpacity, ScrollView, Platform } from 'react-native'
+import React, { useEffect, useState } from 'react'
+import { SafeAreaView } from 'react-native-safe-area-context';
+import {Bars3CenterLeftIcon, MagnifyingGlassIcon} from 'react-native-heroicons/outline'
+import TrendingMovies from '../components/trendingMovies';
+import MovieList from '../components/movieList';
+import { StatusBar } from 'expo-status-bar';
+import { fetchTopRatedMovies, fetchTrendingMovies, fetchUpcomingMovies } from '../api/moviedb';
+import { useNavigation } from '@react-navigation/native';
+import Loading from '../components/loading';
+import { styles } from '../theme';
 
-const ios = Platform.OS == "ios";
+const ios = Platform.OS === 'ios';
 
-const HomeScreen = () => {
-  const[trending, setTrending] = useState([1,2,3])
-  const[upComming, setUpComming] = useState([1,2,3])
-  const[topRated, setTopRated] = useState([1,2,3])
+// Made by Энхжин
+
+export default function HomeScreen() {
+
+  const [trending, setTrending] = useState([]);
+  const [upcoming, setUpcoming] = useState([]);
+  const [topRated, setTopRated] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const navigation = useNavigation();
+
+
+  useEffect(()=>{
+    getTrendingMovies();
+    getUpcomingMovies();
+    getTopRatedMovies();
+  },[]);
+
+  const getTrendingMovies = async ()=>{
+    const data = await fetchTrendingMovies();
+    console.log('Trending ирлээ', data.results.length)
+    if(data && data.results) setTrending(data.results);
+    setLoading(false)
+  }
+  const getUpcomingMovies = async ()=>{
+    const data = await fetchUpcomingMovies();
+    console.log('Upcoming ирлээ', data.results.length)
+    if(data && data.results) setUpcoming(data.results);
+  }
+  const getTopRatedMovies = async ()=>{
+    const data = await fetchTopRatedMovies();
+    console.log('Top Rated ирлээ', data.results.length)
+    if(data && data.results) setTopRated(data.results);
+  }
+
+
+
   return (
-    <View style={{ flex: 1, backgroundColor: "#262626" }}>
-      {/* statusbar */}
-      <SafeAreaView style={ios ? { marginBottom: 8 } : { marginBottom: 12 }}>
+    <View className="flex-1 bg-neutral-800">
+      <SafeAreaView className={ios? "-mb-2": "mb-3"}>
         <StatusBar style="light" />
-        <View style={{flexDirection:"row", justifyContent:"space-between", marginLeft: 16, marginRight: 16}}>
-          <Bars3CenterLeftIcon size="30" strokeWidth={2} color="white"/>
-          <Text style={{color:"white", fontSize:30, lineHeight:36, fontWeight:"bold"}}>
-            <Text style={styles.text} >M</Text>ovies
+        <View className="flex-row justify-between items-center mx-4">
+          <Bars3CenterLeftIcon size="30" strokeWidth={2} color="white" />
+          <Text 
+            className="text-white text-3xl font-bold">
+              <Text style={styles.text}>M</Text>ovies
           </Text>
-          <TouchableOpacity>
-            <MagnifyingGlassIcon size="30" strokeWidth={2} color="white"/>
+          <TouchableOpacity onPress={()=> navigation.navigate('Search')}>
+            <MagnifyingGlassIcon size="30" strokeWidth={2} color="white" />
           </TouchableOpacity>
         </View>
       </SafeAreaView>
+      {
+        loading? (
+          <Loading />
+        ):(
+          <ScrollView 
+            showsVerticalScrollIndicator={false} 
+            contentContainerStyle={{paddingBottom: 10}}
+          >
+            { trending.length>0 && <TrendingMovies data={trending} /> }
 
-      <ScrollView
-      showsVerticalScrollIndicator={false}
-      contentContainerStyle={{padding:10}}
-      >
-        {/* trending movie scroll */}
-        <TrendingMovies data={trending}/>
-        
-        {/* movielist heseg */}
-        <MovieList title="Upcomming" data={upComming} />
-      </ScrollView>
-    </View>
-  );
-};
+            { upcoming.length>0 && <MovieList title="Upcoming" data={upcoming} /> }
+            
+            { topRated.length>0 && <MovieList title="Top Rated" data={topRated} /> }
 
-export default HomeScreen;
+          </ScrollView>
+        )
+      }
+      
+  </View>
+      
+
+   
+  )
+}

@@ -1,7 +1,7 @@
-export const apiKey = 'place your api key here from : https://www.themoviedb.org';
+export const apiKey = '9e86680b2a95bc0962b7e80ba2ae77b8';
 
 
-// this data was used for the development of the app
+// Туршилтын дата
 export const moviesData=[
     {
         id: 2,
